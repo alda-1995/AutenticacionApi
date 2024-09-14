@@ -13,5 +13,7 @@ namespace Service.ViewModels
         public string Message { get; set; }
 
         public string? Token { get; set; }
+
+        public string? TokenConfirm { get; set; }
     }
 }

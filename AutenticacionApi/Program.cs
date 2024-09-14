@@ -6,6 +6,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Service.Interface;
 using Service.Services;
+using System.Net;
+using System.Net.Mail;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -20,6 +22,7 @@ builder.Services.AddScoped<SignInManager<ApplicationUser>>();
 builder.Services.AddScoped<UserManager<ApplicationUser>>();
 builder.Services.AddScoped<IAuthentication, ServiceAuth>();
 builder.Services.AddScoped<IProduct, ProductService> ();
+builder.Services.AddTransient<IEmailService, EmailService>();
 builder.Services.Configure<IdentityOptions>(options =>
 {
     options.Password.RequiredLength = 6;
@@ -55,6 +58,15 @@ builder.Services.AddCors(options =>
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder.Services.AddFluentEmail(builder.Configuration["EmailSettings:FromEmail"])
+    .AddSmtpSender(builder.Configuration["EmailSettings:MailServer"], int.Parse(builder.Configuration["EmailSettings:MailPort"]))
+    .AddSmtpSender(new SmtpClient()
+    {
+        EnableSsl = true,
+        Credentials = new NetworkCredential(builder.Configuration["EmailSettings:FromEmail"], builder.Configuration["EmailSettings:Password"]),
+        Host = builder.Configuration["EmailSettings:MailServer"],
+    });
 
 var app = builder.Build();
 

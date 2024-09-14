@@ -19,11 +19,13 @@ namespace Service.Services
         private readonly SignInManager<ApplicationUser> _singInManager;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IConfiguration _configuration;
-        public ServiceAuth(SignInManager<ApplicationUser> singInManager, UserManager<ApplicationUser> userManager, IConfiguration configuration)
+        private readonly IEmailService _emailService;
+        public ServiceAuth(SignInManager<ApplicationUser> singInManager, UserManager<ApplicationUser> userManager, IConfiguration configuration, IEmailService emailService)
         {
             _singInManager = singInManager;
             _userManager = userManager;
             _configuration = configuration;
+            _emailService = emailService;
         }
 
         public async Task<ResponseViewModel> LogIn(LoginViewModel loginView)
@@ -70,13 +72,20 @@ namespace Service.Services
         {
             try
             {
-                var user = new ApplicationUser { UserName = registerViewModel.UserName, Email = registerViewModel.Email, Lastname = registerViewModel.LastName };
-                var result = await _userManager.CreateAsync(user, registerViewModel.Password);
-                if (!result.Succeeded)
+                var user = new ApplicationUser
                 {
-                    return new ResponseViewModel { Message = string.Join(", ", result.Errors.Select(e => e.Description)), Success = false  };
-                }
-                return new ResponseViewModel { Message = "register completed", Success = true };
+                    UserName = registerViewModel.UserName,
+                    Email = registerViewModel.Email,
+                    Lastname = registerViewModel.LastName
+                };
+                //    var result = await _userManager.CreateAsync(user, registerViewModel.Password);
+                //    if (!result.Succeeded)
+                //    {
+                //        return new ResponseViewModel { Message = string.Join(", ", result.Errors.Select(e => e.Description)), Success = false  };
+                //    }
+                var codeConfirm = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                //await _emailService.SendEmail("aldairreyess04@gmail.com", "prueba", "hola mundo");
+                return new ResponseViewModel { Message = "register completed", Success = true, TokenConfirm = codeConfirm };
             }
             catch(Exception ex)
             {
